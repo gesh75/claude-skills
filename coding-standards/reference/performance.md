@@ -1,0 +1,49 @@
+# Performance Best Practices
+
+## Memoization
+
+```typescript
+import { useMemo, useCallback } from 'react'
+
+// PASS: GOOD: Memoize expensive computations
+const sortedMarkets = useMemo(() => {
+  return markets.sort((a, b) => b.volume - a.volume)
+}, [markets])
+
+// PASS: GOOD: Memoize callbacks
+const handleSearch = useCallback((query: string) => {
+  setSearchQuery(query)
+}, [])
+```
+
+## Lazy Loading
+
+```typescript
+import { lazy, Suspense } from 'react'
+
+// PASS: GOOD: Lazy load heavy components
+const HeavyChart = lazy(() => import('./HeavyChart'))
+
+export function Dashboard() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <HeavyChart />
+    </Suspense>
+  )
+}
+```
+
+## Database Queries
+
+```typescript
+// PASS: GOOD: Select only needed columns
+const { data } = await supabase
+  .from('markets')
+  .select('id, name, status')
+  .limit(10)
+
+// FAIL: BAD: Select everything
+const { data } = await supabase
+  .from('markets')
+  .select('*')
+```

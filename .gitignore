@@ -1,0 +1,8 @@
+# skill-stocktake mutable cache (regenerated on each run)
+skill-stocktake/results.json
+
+# script backups created during edits
+*.bak
+
+# macOS
+.DS_Store
