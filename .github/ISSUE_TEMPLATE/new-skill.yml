@@ -1,0 +1,57 @@
+name: 🧩 New skill proposal
+description: Propose adding a new Claude Code skill to the library
+title: "[skill] <name>: <one-line purpose>"
+labels: ["new-skill"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a skill. See [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) for the conventions.
+  - type: input
+    id: name
+    attributes:
+      label: Skill name (kebab-case)
+      description: Must match the file/dir name, e.g. `postgres-patterns`.
+      placeholder: my-new-skill
+    validations:
+      required: true
+  - type: input
+    id: description
+    attributes:
+      label: Description (the frontmatter trigger)
+      description: One sentence — WHAT it does + WHEN to trigger. Keep under ~350 chars.
+      placeholder: "X patterns for Y. Use when the user is doing Z."
+    validations:
+      required: true
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Shape
+      options:
+        - "Single file (<name>.md)"
+        - "Directory with reference/ files (<name>/SKILL.md)"
+    validations:
+      required: true
+  - type: textarea
+    id: covers
+    attributes:
+      label: What it covers
+      description: Core patterns, checklists, or code the skill provides.
+    validations:
+      required: true
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Overlap & sources
+      description: Does it overlap an existing skill (which one)? Any upstream source / license to credit?
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Conventions
+      options:
+        - label: Description is trigger-oriented and under ~350 chars
+        - label: Bulky detail will live in reference/*.md (progressive disclosure)
+        - label: Uses current model IDs (claude-opus-4-8 / claude-sonnet-4-6 / claude-haiku-4-5) if any
+        - label: No duplicate/shadow of an existing skill

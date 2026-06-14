@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Contributing & skill conventions
+    url: https://github.com/gesh75/claude-skills/blob/main/CONTRIBUTING.md
+    about: How skills are structured, sized, and audited before they go in.
+  - name: 🔎 Run the audit (skill-stocktake)
+    url: https://github.com/gesh75/claude-skills/tree/main/skill-stocktake
+    about: Inventory and score every skill before opening a fix issue.
