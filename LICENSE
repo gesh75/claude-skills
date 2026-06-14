@@ -1,0 +1,27 @@
+All Rights Reserved
+
+Copyright (c) 2026 Georgi Gaydarov
+
+This is a personal Claude Code skills library. All rights reserved.
+
+No permission is granted to use, copy, modify, distribute, sublicense, or
+publish any part of this repository, in whole or in part, without the prior
+written consent of the copyright holder. This repository is published for
+personal and backup purposes only.
+
+THIRD-PARTY CONTENT
+-------------------
+Some skills in this repository were sourced from or adapted from third-party
+projects and remain subject to their own original licenses, which take
+precedence over this notice for the affected files. Known sources include:
+
+  - everything-claude-code (Apache License 2.0)
+    https://github.com/affaan-m/everything-claude-code
+  - vibeship-spawner-skills (Apache License 2.0)
+
+Where a skill or file carries its own license, attribution, or "source:"
+metadata, that license governs that file. The "All Rights Reserved" terms
+above apply only to original content authored by the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED.
