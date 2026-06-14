@@ -1,0 +1,18 @@
+# Code owners for claude-skills
+# Syntax: https://docs.github.com/articles/about-code-owners
+#
+# Owners are auto-requested for review on PRs touching matching paths.
+# (Enforcement as a required review needs branch protection, which is
+#  Pro-gated for private repos — the ownership mapping below still applies.)
+
+# Default owner for everything
+*                       @gesh75
+
+# Auditing tooling
+/skill-stocktake/       @gesh75
+
+# Repo meta / community health files
+/.github/               @gesh75
+/README.md              @gesh75
+/LICENSE                @gesh75
+/CONTRIBUTING.md        @gesh75
