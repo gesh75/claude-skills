@@ -17,8 +17,12 @@ public issue**:
 - A skill whose guidance could induce harmful, destructive, or injection-style
   behavior (e.g. prompt-injection payloads, instructions to exfiltrate data).
 
-**How:** use GitHub's [private vulnerability reporting](https://github.com/gesh75/claude-skills/security/advisories/new)
-(Security → Report a vulnerability), or email **georgy75@gmail.com**.
+**How:** email **georgy75@gmail.com** with the details.
+
+> Note: GitHub's private vulnerability reporting is not enabled while this
+> repository is private (the feature requires a public repo or GitHub Advanced
+> Security). If the repo is ever made public, reporting will also be available
+> via **Security → Report a vulnerability**.
 
 Please include the file path, the line(s), and why it's a concern. I aim to
 acknowledge within a few days.
