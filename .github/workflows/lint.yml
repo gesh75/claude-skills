@@ -1,6 +1,10 @@
 name: lint
 on: [push, pull_request]
 
+# Least privilege: the linter only needs to read the checked-out tree.
+permissions:
+  contents: read
+
 jobs:
   skill-lint:
     runs-on: ubuntu-latest
@@ -9,7 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Fetch claude-skill-lint
-        run: curl -fsSL https://raw.githubusercontent.com/gesh75/claude-skill-lint/main/skill_lint.py -o /tmp/skill_lint.py
+      # Runs the vendored linter (.github/bin/skill_lint.py) — committed and
+      # reviewed in-repo, not fetched at run time, to avoid supply-chain risk.
+      # Update it with: cp ~/path/to/claude-skill-lint/skill_lint.py .github/bin/
       - name: Lint skills
-        run: python3 /tmp/skill_lint.py . --quiet
+        run: python3 .github/bin/skill_lint.py . --quiet
