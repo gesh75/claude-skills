@@ -2,11 +2,10 @@
 name: token-budget-advisor
 description: >-
   Offer the user an informed choice about response depth/length before
-  answering. TRIGGER when the user explicitly wants to control answer
-  size: "token budget", "response length", "short/brief version",
-  "detailed/exhaustive answer", "answer depth", or clear variants (incl.
-  Spanish). DO NOT TRIGGER when a level is already set this session, the
-  ask is a one-word answer, or "token" means auth/session/payment.
+  answering. TRIGGER when the user explicitly wants to control answer size:
+  "token budget", "response length", "short/brief version", "answer depth",
+  or clear variants. DO NOT TRIGGER when a level is already set this session,
+  or "token" means auth/payment.
 origin: community
 ---
 

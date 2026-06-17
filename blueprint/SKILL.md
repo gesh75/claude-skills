@@ -3,9 +3,9 @@ name: blueprint
 description: >-
   Turn a one-line objective into a step-by-step, multi-session construction
   plan where each step has a self-contained brief a fresh agent can execute
-  cold. TRIGGER when the user wants a plan/blueprint/roadmap for a complex
-  multi-PR task or work spanning multiple sessions. DO NOT TRIGGER when the
-  task fits one PR / under 3 tool calls, or the user says "just do it".
+  cold. TRIGGER when the user wants a plan/blueprint/roadmap for complex
+  multi-PR or multi-session work. DO NOT TRIGGER for a single-PR task,
+  under 3 tool calls, or "just do it".
 origin: community
 ---
 

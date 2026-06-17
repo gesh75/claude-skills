@@ -1,13 +1,11 @@
 ---
 name: prompt-optimizer
 description: >-
-  Analyze a raw prompt, identify intent/gaps, match ECC components, and
-  output a ready-to-paste optimized prompt. Advisory only — never executes
-  the task. TRIGGER: "optimize/improve/rewrite my prompt", "help me prompt"
-  (incl. Chinese equivalents like 优化prompt). DO NOT TRIGGER when the user
-  wants the task done directly ("just do it"), or means code/performance
-  optimization ("optimize this code", 优化代码/优化性能) — that's refactoring,
-  not prompt work.
+  Analyze a raw prompt, identify gaps, match ECC components, and output a
+  ready-to-paste optimized prompt. Advisory only — never executes the task.
+  TRIGGER: "optimize/improve/rewrite my prompt" (incl. Chinese 优化prompt).
+  DO NOT TRIGGER when the user wants the task done, or means code
+  optimization (优化代码) — that's refactoring.
 origin: community
 metadata:
   author: YannJY02

@@ -247,50 +247,7 @@ LIMIT 21;  -- fetch one extra to determine has_next
 
 ## Filtering, Sorting, and Search
 
-### Filtering
-
-```
-# Simple equality
-GET /api/v1/orders?status=active&customer_id=abc-123
-
-# Comparison operators (use bracket notation)
-GET /api/v1/products?price[gte]=10&price[lte]=100
-GET /api/v1/orders?created_at[after]=2025-01-01
-
-# Multiple values (comma-separated)
-GET /api/v1/products?category=electronics,clothing
-
-# Nested fields (dot notation)
-GET /api/v1/orders?customer.country=US
-```
-
-### Sorting
-
-```
-# Single field (prefix - for descending)
-GET /api/v1/products?sort=-created_at
-
-# Multiple fields (comma-separated)
-GET /api/v1/products?sort=-featured,price,-created_at
-```
-
-### Full-Text Search
-
-```
-# Search query parameter
-GET /api/v1/products?q=wireless+headphones
-
-# Field-specific search
-GET /api/v1/users?email=alice
-```
-
-### Sparse Fieldsets
-
-```
-# Return only specified fields (reduces payload)
-GET /api/v1/users?fields=id,name,email
-GET /api/v1/orders?fields=id,total,status&include=customer.name
-```
+Query-param conventions for filtering, sorting, and search. See [Filtering, Sorting & Search](reference/filtering.md).
 
 ## Authentication and Authorization
 
@@ -420,3 +377,4 @@ Before shipping a new endpoint:
 ## Reference Files
 
 - `reference/implementations.md` — read when implementing an endpoint in code; contains full TypeScript (Next.js), Python (Django REST Framework), and Go (net/http) examples of validated resource creation with `201`/`Location`/error responses.
+- `reference/filtering.md` — read when designing query-param conventions for filtering, sorting, and search.
