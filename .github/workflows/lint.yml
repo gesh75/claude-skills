@@ -1,0 +1,15 @@
+name: lint
+on: [push, pull_request]
+
+jobs:
+  skill-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Fetch claude-skill-lint
+        run: curl -fsSL https://raw.githubusercontent.com/gesh75/claude-skill-lint/main/skill_lint.py -o /tmp/skill_lint.py
+      - name: Lint skills
+        run: python3 /tmp/skill_lint.py . --quiet
