@@ -1,5 +1,7 @@
 # claude-skills
 
+[![lint](https://github.com/gesh75/claude-skills/actions/workflows/lint.yml/badge.svg)](https://github.com/gesh75/claude-skills/actions/workflows/lint.yml)
+
 Personal [Claude Code](https://claude.com/claude-code) skills library — the contents of `~/.claude/skills`.
 
 A **skill** is a self-contained capability Claude Code loads on demand: a `description` that tells the model *when* to use it, and a body of guidance, checklists, and code it pulls in *only when triggered*. This repo is my curated, audited set of them.
