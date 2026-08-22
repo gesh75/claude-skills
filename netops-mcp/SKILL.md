@@ -1,6 +1,7 @@
 ---
 name: netops-mcp
-description: Operate multi-vendor network devices (Juniper Junos, Arista EOS, Cisco IOS/XR/NX-OS) through the netops MCP server (NAPALM + Netmiko). Use when troubleshooting or changing live network gear — BGP/OSPF/MPLS, interfaces, VLANs, routing — or reading device state. Enforces read-first, dry-run-before-commit, and consent-gated changes.
+description: Operate multi-vendor network devices (Junos, EOS, IOS/XR/NX-OS) via the netops MCP (NAPALM + Netmiko). Use for live troubleshooting or changes — BGP/OSPF/MPLS, interfaces, VLANs, routing. Read-first, dry-run, consent-gated. Not for CAB/RFC (network-change-cab).
+origin: snm-pack
 ---
 
 # netops-mcp — safe network operations
@@ -8,6 +9,9 @@ description: Operate multi-vendor network devices (Juniper Junos, Arista EOS, Ci
 You have an MCP server (`netops`) that connects to real network devices. Treat every
 device as production. **Default to read-only. Never change a device without a dry-run
 and explicit human confirmation.**
+
+Role-level work (CAB, RFC, healthcare, diagrams) belongs in the
+**senior-network-manager** pack — see Pairs with.
 
 ## Golden rules
 
@@ -46,6 +50,8 @@ and explicit human confirmation.**
 **Reachability / path**
 `get_arp_table` → `get_mac_address_table` → `traceroute_from_device` → `ping_from_device`.
 
+More playbooks: [reference/playbooks.md](reference/playbooks.md).
+
 ## Change workflow (canonical)
 
 ```
@@ -57,6 +63,10 @@ commit_config(dev, cfg, token, mode)
 # verify
 get_* (confirm the change took effect)
 ```
+
+Production mutations also need a JSM Change (`network-change-cab` +
+`atlassian-ops`) unless the user is in an active Sev1 and explicitly
+chooses emergency.
 
 ## Vendor notes
 
@@ -75,3 +85,13 @@ get_* (confirm the change took effect)
 - Never echo raw `get_config` secrets back to the user; redaction is best-effort.
 - If asked to do something destructive (erase, reload, zeroize), refuse and explain —
   the server blocks these, but you should not attempt them.
+- Healthcare / ePHI paths: load `healthcare-network` and do **not** take packet
+  captures on clinical VLANs.
+
+## Pairs with
+
+`senior-network-manager` (role) · `network-change-cab` (ticket/CAB) ·
+`network-observability` (probes) · `healthcare-network` (clinical)
+
+## Reference Files
+- [reference/playbooks.md](reference/playbooks.md) — extra diagnostic sequences

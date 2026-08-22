@@ -10,10 +10,20 @@ A **skill** is a self-contained capability Claude Code loads on demand: a `descr
 
 | | |
 |---|---|
-| Directory skills (`<name>/SKILL.md`) | **80** |
+| Directory skills (`<name>/SKILL.md`) | **91** |
 | Standalone skills (`<name>.md`) | **43** |
-| Active skills total | **123** |
-| Progressive-disclosure reference files | **86** |
+| Active skills total | **134** |
+| Progressive-disclosure reference files | **100** |
+| Role packs | [senior-network-manager](PACKS.md) |
+
+## Senior Network Manager pack
+
+The library was software-engineering heavy and had **one** live-device skill
+(`netops-mcp`). The SNM pack fills the role: healthcare, CAB, RFC analysis,
+Notion / Lucid / Atlassian, diagrams, observability, posture.
+
+See **[PACKS.md](PACKS.md)** for the routing table. Entry skill:
+[`senior-network-manager`](senior-network-manager/SKILL.md).
 
 ## Layout
 
@@ -23,6 +33,7 @@ A **skill** is a self-contained capability Claude Code loads on demand: a `descr
 │   ├── SKILL.md              # the skill (frontmatter + core guidance)
 │   └── reference/*.md        # detail loaded on demand (progressive disclosure)
 ├── <skill-name>.md           # single-file skill
+├── PACKS.md                  # role packs (maps, not a skill)
 └── skill-stocktake/          # the auditing tool (see below)
     └── scripts/
 ```
@@ -32,7 +43,7 @@ Two valid skill shapes, and **only** these are treated as skills:
 - a **top-level** `<name>.md`, or
 - a **`<dir>/SKILL.md`**.
 
-Everything else (`reference/`, `rules/`, `agents/`, sibling content files) is supporting material, not an independently-loaded skill.
+Everything else (`reference/`, `rules/`, `agents/`, sibling content files, `PACKS.md`) is supporting material, not an independently-loaded skill.
 
 ### Anatomy of a skill
 
@@ -76,6 +87,7 @@ The scan scripts count **only** real skills (`<name>.md` or `<dir>/SKILL.md`) �
 - **Bodies** over ~400 lines use progressive disclosure (`reference/*.md`).
 - **Model IDs** reference current Claude models — Opus 4.8 (`claude-opus-4-8`), Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5`).
 - **No duplicates / shadows** — a name resolves to exactly one skill.
+- **Packs** (see [PACKS.md](PACKS.md)) are documentation; they do not load as skills.
 
 ## Notes
 

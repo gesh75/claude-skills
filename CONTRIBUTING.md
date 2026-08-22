@@ -25,6 +25,10 @@ description: One sentence — WHAT it does + WHEN to trigger. Keep under ~350 ch
 Core guidance and the most-used patterns, inline.
 ```
 
+Role packs (several skills that route to each other) are documented in
+[PACKS.md](PACKS.md). Add a row there when you add a pack skill; do not
+create a `PACKS` skill.
+
 ## Conventions
 
 | Rule | Why |
@@ -37,6 +41,7 @@ Core guidance and the most-used patterns, inline.
 | No duplicate / shadow skills | A name must resolve to exactly one skill |
 | No dead references | Every `reference/X.md` / sibling-file / cross-skill link must exist |
 | No secrets | No real keys/tokens — use obvious placeholders in examples |
+| No PHI in examples | Healthcare skills use fake sites (`MAI`) and no patient data |
 
 ### Progressive disclosure
 
@@ -67,9 +72,7 @@ The scan counts only real skills (`<name>.md` or `<dir>/SKILL.md`) — `referenc
 A quick local sanity check that all frontmatter parses:
 
 ```bash
-for f in */SKILL.md *.md; do
-  python3 -c "import yaml,sys; fm=yaml.safe_load(open('$f').read().split('---')[1]); assert fm.get('name') and fm.get('description')" || echo "INVALID: $f"
-done
+python3 .github/bin/skill_lint.py . --quiet
 ```
 
 ## Commits
