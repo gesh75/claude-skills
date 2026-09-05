@@ -68,6 +68,7 @@ def find_skill_files(root: str) -> list[str]:
         if os.path.isfile(full) and entry.endswith(".md") and entry not in (
             "README.md", "CONTRIBUTING.md", "LICENSE.md", "SECURITY.md",
             "PACKS.md", "CHANGELOG.md", "CODE_OF_CONDUCT.md",
+            "GAP_ANALYSIS.md",
         ):
             skills.append(full)
     for dirpath, _dirnames, filenames in os.walk(root):
