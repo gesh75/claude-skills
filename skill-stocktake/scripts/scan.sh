@@ -15,6 +15,15 @@ set -euo pipefail
 
 GLOBAL_DIR="${SKILL_STOCKTAKE_GLOBAL_DIR:-$HOME/.claude/skills}"
 CWD_SKILLS_DIR="${SKILL_STOCKTAKE_PROJECT_DIR:-${1:-$PWD/.claude/skills}}"
+# This repo *is* the skills tree. A clone has neither ~/.claude/skills nor
+# $PWD/.claude/skills, so the documented `bash skill-stocktake/scripts/scan.sh`
+# used to inventory zero skills. Fall back to the repo root in that case.
+if [[ -z "${SKILL_STOCKTAKE_GLOBAL_DIR:-}" && ! -d "$GLOBAL_DIR" ]]; then
+  _stocktake_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  if [[ -f "$_stocktake_root/skill-stocktake/scripts/scan.sh" ]]; then
+    GLOBAL_DIR="$_stocktake_root"
+  fi
+fi
 # Path to JSONL file containing tool-use observations (optional; used for usage frequency counts).
 # Override via SKILL_STOCKTAKE_OBSERVATIONS env var if your setup uses a different path.
 OBSERVATIONS="${SKILL_STOCKTAKE_OBSERVATIONS:-$HOME/.claude/observations.jsonl}"
@@ -121,7 +130,11 @@ scan_dir_to_json() {
   # A skill file is a top-level <name>.md OR a <dir>/SKILL.md. Everything else
   # (reference/, rules/, agents/, sibling content files, STYLE_PRESETS.md, etc.)
   # is supporting content and must NOT be counted as a skill.
-  done < <( { find "$dir" -maxdepth 1 -name '*.md' -type f
+  done < <( { find "$dir" -maxdepth 1 -name '*.md' -type f \
+                ! -name 'README.md' ! -name 'CONTRIBUTING.md' \
+                ! -name 'LICENSE.md' ! -name 'SECURITY.md' \
+                ! -name 'PACKS.md' ! -name 'CHANGELOG.md' \
+                ! -name 'CODE_OF_CONDUCT.md' ! -name 'GAP_ANALYSIS.md'
               find "$dir" -mindepth 2 -name 'SKILL.md' -type f ; } 2>/dev/null | sort)
 
   if [[ $i -eq 0 ]]; then
