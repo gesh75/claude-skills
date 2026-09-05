@@ -16,6 +16,13 @@ set -euo pipefail
 RESULTS_JSON="${1:-}"
 CWD_SKILLS_DIR="${SKILL_STOCKTAKE_PROJECT_DIR:-${2:-$PWD/.claude/skills}}"
 GLOBAL_DIR="${SKILL_STOCKTAKE_GLOBAL_DIR:-$HOME/.claude/skills}"
+# Same clone fallback as scan.sh — this repo root is the skills tree.
+if [[ -z "${SKILL_STOCKTAKE_GLOBAL_DIR:-}" && ! -d "$GLOBAL_DIR" ]]; then
+  _stocktake_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  if [[ -f "$_stocktake_root/skill-stocktake/scripts/quick-diff.sh" ]]; then
+    GLOBAL_DIR="$_stocktake_root"
+  fi
+fi
 
 if [[ -z "$RESULTS_JSON" || ! -f "$RESULTS_JSON" ]]; then
   echo "Error: RESULTS_JSON not found: ${RESULTS_JSON:-<empty>}" >&2
@@ -77,7 +84,11 @@ process_dir() {
   # A skill file is a top-level <name>.md OR a <dir>/SKILL.md. Everything else
   # (reference/, rules/, agents/, sibling content files, STYLE_PRESETS.md, etc.)
   # is supporting content and must NOT be counted as a skill.
-  done < <( { find "$dir" -maxdepth 1 -name '*.md' -type f
+  done < <( { find "$dir" -maxdepth 1 -name '*.md' -type f \
+                ! -name 'README.md' ! -name 'CONTRIBUTING.md' \
+                ! -name 'LICENSE.md' ! -name 'SECURITY.md' \
+                ! -name 'PACKS.md' ! -name 'CHANGELOG.md' \
+                ! -name 'CODE_OF_CONDUCT.md' ! -name 'GAP_ANALYSIS.md'
               find "$dir" -mindepth 2 -name 'SKILL.md' -type f ; } 2>/dev/null | sort)
 }
 
