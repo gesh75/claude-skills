@@ -55,8 +55,12 @@ if [ -z "$transcript_path" ] || [ ! -f "$transcript_path" ]; then
   exit 0
 fi
 
-# Count messages in session
-message_count=$(grep -c '"type":"user"' "$transcript_path" 2>/dev/null || echo "0")
+# Count messages in session.
+# grep -c exits 1 when the count is 0 but still prints "0". Do not `|| echo 0`
+# or the captured value becomes "0\n0" and later `[ "$message_count" -lt … ]`
+# dies with "integer expression expected" (and aborts this Stop hook).
+message_count=$(grep -c '"type":"user"' "$transcript_path" 2>/dev/null || true)
+message_count=${message_count:-0}
 
 # Skip short sessions
 if [ "$message_count" -lt "$MIN_SESSION_LENGTH" ]; then

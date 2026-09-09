@@ -3,8 +3,10 @@
 # Usage: scan.sh [CWD_SKILLS_DIR]
 # Output: JSON to stdout
 #
-# When CWD_SKILLS_DIR is omitted, defaults to $PWD/.claude/skills so the
-# script always picks up project-level skills without relying on the caller.
+# When CWD_SKILLS_DIR is omitted:
+#   1. $PWD/.claude/skills if that directory exists (project overlay)
+#   2. $PWD if this checkout *is* a skills library (has <dir>/SKILL.md)
+#   3. otherwise $PWD/.claude/skills (may not exist → project.found=false)
 #
 # Environment:
 #   SKILL_STOCKTAKE_GLOBAL_DIR   Override ~/.claude/skills (for testing only;
@@ -13,16 +15,62 @@
 
 set -euo pipefail
 
+# Repo-doc markdown that is never a skill (keep in sync with .github/bin/skill_lint.py).
+_STOCKTAKE_DOC_MD="README.md CONTRIBUTING.md LICENSE.md SECURITY.md PACKS.md CHANGELOG.md CODE_OF_CONDUCT.md GAP_ANALYSIS.md"
+
+_looks_like_skills_library() {
+  local dir="$1" hit
+  case "$dir" in
+    */.claude/skills|*/.claude/skills/*) return 0 ;;
+  esac
+  hit=$(find "$dir" -mindepth 2 -maxdepth 2 -name SKILL.md -type f -print -quit 2>/dev/null || true)
+  [[ -n "$hit" ]]
+}
+
+_resolve_project_skills_dir() {
+  if [[ -n "${SKILL_STOCKTAKE_PROJECT_DIR:-}" ]]; then
+    printf '%s\n' "$SKILL_STOCKTAKE_PROJECT_DIR"
+    return
+  fi
+  if [[ -n "${1:-}" ]]; then
+    printf '%s\n' "$1"
+    return
+  fi
+  if [[ -d "$PWD/.claude/skills" ]]; then
+    printf '%s\n' "$PWD/.claude/skills"
+    return
+  fi
+  if _looks_like_skills_library "$PWD"; then
+    printf '%s\n' "$PWD"
+    return
+  fi
+  printf '%s\n' "$PWD/.claude/skills"
+}
+
+list_skill_files() {
+  local dir="$1" f base
+  {
+    find "$dir" -maxdepth 1 -name '*.md' -type f
+    find "$dir" -mindepth 2 -name 'SKILL.md' -type f
+  } 2>/dev/null | sort | while IFS= read -r f; do
+    base="${f##*/}"
+    case " $_STOCKTAKE_DOC_MD " in
+      *" $base "*) continue ;;
+    esac
+    printf '%s\n' "$f"
+  done
+}
+
 GLOBAL_DIR="${SKILL_STOCKTAKE_GLOBAL_DIR:-$HOME/.claude/skills}"
-CWD_SKILLS_DIR="${SKILL_STOCKTAKE_PROJECT_DIR:-${1:-$PWD/.claude/skills}}"
+CWD_SKILLS_DIR="$(_resolve_project_skills_dir "${1:-}")"
 # Path to JSONL file containing tool-use observations (optional; used for usage frequency counts).
 # Override via SKILL_STOCKTAKE_OBSERVATIONS env var if your setup uses a different path.
 OBSERVATIONS="${SKILL_STOCKTAKE_OBSERVATIONS:-$HOME/.claude/observations.jsonl}"
 
-# Validate CWD_SKILLS_DIR looks like a .claude/skills path (defense-in-depth).
-# Only warn when the path exists — a nonexistent path poses no traversal risk.
-if [[ -n "$CWD_SKILLS_DIR" && -d "$CWD_SKILLS_DIR" && "$CWD_SKILLS_DIR" != */.claude/skills* ]]; then
-  echo "Warning: CWD_SKILLS_DIR does not look like a .claude/skills path: $CWD_SKILLS_DIR" >&2
+# Warn only when the path exists and is neither a .claude/skills tree nor a
+# skills-library checkout (top-level <dir>/SKILL.md).
+if [[ -n "$CWD_SKILLS_DIR" && -d "$CWD_SKILLS_DIR" ]] && ! _looks_like_skills_library "$CWD_SKILLS_DIR"; then
+  echo "Warning: CWD_SKILLS_DIR does not look like a skills library: $CWD_SKILLS_DIR" >&2
 fi
 
 # Extract a frontmatter field (handles both quoted and unquoted single-line values).
@@ -121,8 +169,7 @@ scan_dir_to_json() {
   # A skill file is a top-level <name>.md OR a <dir>/SKILL.md. Everything else
   # (reference/, rules/, agents/, sibling content files, STYLE_PRESETS.md, etc.)
   # is supporting content and must NOT be counted as a skill.
-  done < <( { find "$dir" -maxdepth 1 -name '*.md' -type f
-              find "$dir" -mindepth 2 -name 'SKILL.md' -type f ; } 2>/dev/null | sort)
+  done < <(list_skill_files "$dir")
 
   if [[ $i -eq 0 ]]; then
     echo "[]"

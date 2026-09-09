@@ -66,8 +66,10 @@ bash skill-stocktake/scripts/quick-diff.sh skill-stocktake/results.json
 bash skill-stocktake/scripts/scan.sh
 ```
 
-The scan counts only real skills (`<name>.md` or `<dir>/SKILL.md`) — `reference/`,
-`rules/`, `agents/`, and sibling content files are ignored.
+Run from the repo root (this tree *is* the skills library). The scan counts only
+real skills (`<name>.md` or `<dir>/SKILL.md`) — repo docs (`README.md`,
+`PACKS.md`, …), `reference/`, `rules/`, `agents/`, and sibling content files are
+ignored.
 
 A quick local sanity check that all frontmatter parses:
 
