@@ -1,5 +1,10 @@
 # Gap analysis
 
+> Merge note (2026-09-20): `origin/main` was merged into this Cursor gap-scan
+> branch. Unique scan/fix work from the PR is kept. Do not drop later main
+> changes in other files.
+
+
 Evidence-backed scan of [gesh75/claude-skills](https://github.com/gesh75/claude-skills)
 (this tree is the skills library; CI is lint-only). Ranked by impact.
 Out of scope: rewrites, dependency upgrades, new product features.

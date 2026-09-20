@@ -79,7 +79,9 @@ bash skill-stocktake/scripts/scan.sh
 bash skill-stocktake/scripts/quick-diff.sh skill-stocktake/results.json
 ```
 
-The scan scripts count **only** real skills (`<name>.md` or `<dir>/SKILL.md`) — they ignore `reference/`, `rules/`, `agents/`, and sibling content files so the inventory reflects actual skills, not progressive-disclosure chunks.
+Run from this repo root. The scanner treats a checkout that *is* a skills library (has `<dir>/SKILL.md`) as the inventory; it also accepts `$PWD/.claude/skills` when that overlay exists.
+
+The scan scripts count **only** real skills (`<name>.md` or `<dir>/SKILL.md`) — they ignore `README.md` / `PACKS.md` / other repo docs, plus `reference/`, `rules/`, `agents/`, and sibling content files.
 
 ## Conventions
 

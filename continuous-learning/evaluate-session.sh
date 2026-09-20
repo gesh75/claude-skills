@@ -56,8 +56,9 @@ if [ -z "$transcript_path" ] || [ ! -f "$transcript_path" ]; then
 fi
 
 # Count messages in session.
-# grep -c prints "0" and exits 1 on no matches; `|| echo 0` would append a
-# second 0 (message_count="0\n0") and break the integer test below.
+# grep -c exits 1 when the count is 0 but still prints "0". Do not `|| echo 0`
+# or the captured value becomes "0\n0" and later `[ "$message_count" -lt … ]`
+# dies with "integer expression expected" (and aborts this Stop hook).
 message_count=$(grep -c '"type":"user"' "$transcript_path" 2>/dev/null || true)
 message_count=${message_count:-0}
 
