@@ -1,148 +1,160 @@
-# Gap analysis — claude-skills
+# Gap analysis
 
-Scan date: 2026-09-05. Scope: this checkout (`gesh75/claude-skills`), not a
-rewrite of the skill corpus. Evidence is from running commands in this tree,
-not from memory.
+> Merge note (2026-09-20): `origin/main` was merged into this Cursor gap-scan
+> branch. Unique scan/fix work from the PR is kept. Do not drop later main
+> changes in other files.
 
-**Inventory (linter):** 134 skills — 91 `*/SKILL.md` + 43 top-level `*.md`.
-Matches the README table. `python3 .github/bin/skill_lint.py .` →
-`134 clean · 0 errors · 0 warnings`.
 
-**This PR's safe fixes (3):**
+Evidence-backed scan of [gesh75/claude-skills](https://github.com/gesh75/claude-skills)
+(this tree is the skills library; CI is lint-only). Ranked by impact.
+Out of scope: rewrites, dependency upgrades, new product features.
 
-1. `skill-stocktake/scripts/scan.sh` + `quick-diff.sh` — inventory *this* repo
-   and skip repo-doc markdown (`README.md`, `PACKS.md`, …).
-2. `continuous-learning/evaluate-session.sh` — `grep -c || echo 0` crash on
-   zero matches.
-3. `.github/workflows/lint.yml` — run the existing instinct pytest file.
+**Proved this pass**
+
+- `python3 .github/bin/skill_lint.py .` → **134 skills, 0 errors / 0 warnings**.
+- README inventory matches disk: **91** `*/SKILL.md` + **43** top-level skill
+  `*.md` + **100** `reference/*.md`.
+- Documented stocktake path is broken on a clone (command output below).
+- Existing pytest suite is not installed and not run in CI.
+- GitHub Actions `lint` on `main` is green (latest: `33a9164`, 2026-08-25).
+- No committed live secrets found (examples use env vars / placeholders).
+
+**Skipped**
+
+- Full `/skill-stocktake` AI verdict pass (needs Claude + `results.json`).
+- Installing VideoDB / running `videodb/scripts/ws_listener.py`.
+- Rewriting `continuous-learning` vs `continuous-learning-v2` overlap.
+- Updating the GitHub repo description (says 123 skills; README says 134).
 
 ---
 
-## P0 — fix or it lies
+## P0 — fix now
 
-### P0-1. Documented stocktake scans the wrong tree and counts docs as skills
+### P0-1. Documented stocktake scan inventories **zero** skills on a clone
 
-**Files:** `skill-stocktake/scripts/scan.sh`, `skill-stocktake/scripts/quick-diff.sh`  
-**Cited by:** `README.md` (skill-stocktake section), `CONTRIBUTING.md` (“Before committing”)
+**Files:** `README.md` (lines 74–76), `CONTRIBUTING.md` (lines 61–66),
+`skill-stocktake/scripts/scan.sh`.
 
-**Evidence (before this PR, from repo root):**
+**Evidence:** `scan.sh` defaults to `$HOME/.claude/skills` and
+`$PWD/.claude/skills`. This repo *is* the skills tree at the root; those
+paths do not exist in a clone or in CI.
 
 ```text
 $ bash skill-stocktake/scripts/scan.sh
-# scan_summary.global.found = false
-# scan_summary.project.found = false
-# skills = []
+{
+  "scan_summary": {
+    "global": { "found": false, "count": 0 },
+    "project": { "found": false, "path": "", "count": 0 }
+  },
+  "skills": []
+}
 ```
 
-Default project path was `$PWD/.claude/skills` (ECC overlay). This repository
-*is* the skills library; that overlay does not exist here. The documented
-command therefore printed an empty inventory.
+`CONTRIBUTING.md` then tells you to run
+`bash skill-stocktake/scripts/quick-diff.sh skill-stocktake/results.json`,
+but `skill-stocktake/results.json` is gitignored and absent → exit 1:
+`Error: RESULTS_JSON not found`.
 
-Workaround `bash skill-stocktake/scripts/scan.sh .` then **over-counted**:
+**Fix shipped this PR:** fall back to the repo root when
+`~/.claude/skills` is missing.
 
-```text
-# Warning: CWD_SKILLS_DIR does not look like a .claude/skills path: .
-# project.count = 137
-# empty name: PACKS.md
-```
+### P0-2. Even when pointed at this tree, scan invents fake skills
 
-`find … -maxdepth 1 -name '*.md'` included `README.md`, `CONTRIBUTING.md`, and
-`PACKS.md`. The vendored linter already excludes those
-(`.github/bin/skill_lint.py` `find_skill_files`). Scanner and
-linter disagreed by 3. This file (`GAP_ANALYSIS.md`) is on the same denylist
-so it is not itself a fourth “skill”.
+**File:** `skill-stocktake/scripts/scan.sh` (`find … -maxdepth 1 -name '*.md'`).
 
-**Fix in this PR:** if `$PWD/.claude/skills` is absent and `$PWD` has
-`<dir>/SKILL.md`, scan `$PWD`. Drop the same doc-file denylist as the linter.
-Re-run: `project.count = 134`, no empty names, no warning.
+**Evidence:** `SKILL_STOCKTAKE_GLOBAL_DIR=. bash skill-stocktake/scripts/scan.sh`
+returns **137** (not 134). Extra paths:
 
-### P0-2. Stop-hook script dies on a short / empty transcript
+| Path | Extracted `name:` |
+|------|-------------------|
+| `./README.md` | `my-skill` (from the anatomy example) |
+| `./CONTRIBUTING.md` | `my-skill          # kebab-case…` |
+| `./PACKS.md` | empty |
 
-**File:** `continuous-learning/evaluate-session.sh` line 59 (pre-fix)
+The linter already excludes those meta files (`.github/bin/skill_lint.py`
+lines 68–71). The stocktake find does not, so a correctly-installed
+`~/.claude/skills` copy of this repo would also over-count.
 
-**Evidence:** `grep -c` exits 1 when the count is 0 *and still prints `0`*.
-`$(grep -c … || echo "0")` therefore becomes `0\n0`. With `set -e`:
+**Fix shipped this PR:** same meta-file exclusion as the linter
+(including `GAP_ANALYSIS.md`).
 
-```text
-$ message_count=$(grep -c '"type":"user"' /tmp/no-users.jsonl || echo "0")
-$ [ "$message_count" -lt 10 ]
-# bash: [: 0
-# 0: integer expression expected
-```
+### P0-3. The only executable test suite is not in CI
 
-The Stop hook then aborts instead of skipping a short session. Reproduced in
-this environment with a one-line JSONL file that has no `"type":"user"`.
+**Files:** `continuous-learning-v2/scripts/test_parse_instinct.py`
+(50+ pytest cases), `.github/workflows/lint.yml` (lint only).
 
-**Fix in this PR:** capture `grep -c … || true` and default empty to `0`.
+**Evidence:** workflow step is solely
+`python3 .github/bin/skill_lint.py . --quiet`. This environment has no
+`pytest` (`ModuleNotFoundError: No module named 'pytest'`), so the suite
+cannot run locally without an extra install and would never fail a PR.
 
-### P0-3. Existing unit tests never run in CI
-
-**Files:** `continuous-learning-v2/scripts/test_parse_instinct.py` (50+ tests,
-including path-traversal / invalid-id guards), `.github/workflows/lint.yml`
-
-**Evidence:** the only workflow job was `skill-lint`.
-`gh run list` on `main` shows `lint` success only — no pytest job.
-`python3 -c "import pytest"` fails in a clean environment; the suite is
-unrunnable without an explicit install, and CI never installed it.
-
-Those tests are the only automated check of executable Python in the library
-(instinct promote path-traversal, registry atomic write). They were dead
-weight in CI.
-
-**Fix in this PR:** `instinct-tests` job — `pip install pytest` at job time
-(not a repo runtime dependency) and run that file.
+**Fix shipped this PR:** CI job installs pytest and runs that file.
 
 ---
 
-## P1 — real, but not this PR
+## P1 — soon
 
-| ID | Area | Evidence | Why skipped |
-|----|------|----------|-------------|
-| P1-1 | Docs / correctness | `continuous-learning/SKILL.md` line 119: `See: docs/continuous-learning-v2-spec.md` — `docs/` does not exist (`ls docs` → No such file). | Deleting one stale sentence is safe but not a failing hook; left for a docs pass. |
-| P1-2 | Docs / correctness | `configure-ecc/SKILL.md` catalogs 12 skills not in this tree (`jpa-patterns`, `laravel-*`, `springboot-*`, `golang-*`, `java-coding-standards`). Upstream ECC catalog vs this personal subset. | Editing the ECC install map without a product decision is a rewrite of a skill, not a gap-scan fix. |
-| P1-3 | Correctness / lint hole | Linter only reads top-level `*.md` and `*/SKILL.md`. `project-guidelines-example/reference/example-code.md` line 77 still has `claude-sonnet-4-5-20250514`. Stale-model check never sees `reference/`. | Extending the linter is a feature. One-line model bump is safe later. |
-| P1-4 | Docs | `.github/SECURITY.md` links `[LICENSE](../blob/main/LICENSE)`; `.github/ISSUE_TEMPLATE/new-skill.yml` links `../blob/main/CONTRIBUTING.md`. Those paths do not exist on disk (`../blob/` is a GitHub URL fragment, not a relative file). | Cosmetic; GitHub sometimes still resolves them in the UI. |
-| P1-5 | DX / overlap | `continuous-learning` (v1 Stop hook) and `continuous-learning-v2` both load. `skill-stocktake/SKILL.md` already uses v1 as the example *Retire* target. | Retirement needs an explicit “move out of tree” decision (`CONTRIBUTING.md`). |
-| P1-6 | CI | No job asserts stocktake JSON count == linter count. Easy to regress P0-1. | Follow-up after this PR’s scanner change settles. |
+### P1-1. `evaluate-session.sh` double-counts zero matches (`set -e` footgun)
+
+**File:** `continuous-learning/evaluate-session.sh` line 59.
+
+```bash
+message_count=$(grep -c '"type":"user"' "$transcript_path" 2>/dev/null || echo "0")
+```
+
+`grep -c` prints `0` and exits 1 on no matches, so `|| echo "0"` appends
+a second `0` → `$message_count` is `0\n0`. Then
+`[ "$message_count" -lt … ]` is `integer expression expected` (proved
+with a transcript that has only `"type":"assistant"`).
+
+**Fix shipped this PR:** `|| true` and default to `0`.
+
+### P1-2. Official security-policy LICENSE link is dead
+
+**File:** `.github/SECURITY.md` line 43:
+`[LICENSE](../blob/main/LICENSE)` resolves to `/LICENSE` path
+`blob/main/LICENSE`, which does not exist. Correct target: `../LICENSE`.
+
+### P1-3. GitHub repo description is stale
+
+API `description` still says **123** skills; README / lint say **134**.
+Cannot be fixed in-tree.
+
+### P1-4. Reference files are not linted for stale model IDs
+
+Linter only walks skill bodies. `project-guidelines-example/reference/example-code.md`
+still has `claude-sonnet-4-5-20250514` (current convention: `claude-sonnet-4-6`).
+
+### P1-5. `skill-stocktake` comments mention bats tests that do not exist
+
+`scan.sh` / `quick-diff.sh` headers: “intended for bats tests”.
+`find . -name '*.bats'` → 0 files. No automated coverage of the audit
+scripts (the clone-empty-scan bug would have been caught).
 
 ---
 
-## P2 — backlog
+## P2 — later / cleanup
 
-| ID | Area | Evidence | Notes |
-|----|------|----------|-------|
-| P2-1 | Dead code / comments | `scan.sh` header mentions “bats tests”; no `*.bats` in the repo. | Don’t invent a bats suite here. |
-| P2-2 | Tests | `skill_lint.py` is the CI gate and has no unit tests (`# pragma: no cover` on the read-error path). | Fine while the script stays ~250 lines; add tests if the linter grows. |
-| P2-3 | Scripts | `videodb/scripts/ws_listener.py` imports `dotenv` + `videodb` — no requirements pin, no test. Example companion, not CI-critical. | |
-| P2-4 | Security | No secret-scan workflow. Grep of `api_key` / `sk-` hits are placeholders (`YOUR_EXA_API_KEY_HERE`, `os.environ[...]`). No live credential found. | Add gitleaks only if the repo goes public. |
-| P2-5 | DX | README skill counts are a manual table. They happen to be correct today; they will rot. | A one-line `scan.sh \| jq` in CI (P1-6) is enough. |
-| P2-6 | Docs | `PACKS.md` is not a skill (correct) but was counted as one by the old scanner (empty `name`). | Fixed as part of P0-1. |
-| P2-7 | License | `LICENSE` is All Rights Reserved with a third-party Apache carve-out. No per-file `NOTICE` for ECC-origin skills beyond `origin: ECC` frontmatter. | Legal hygiene, not a code defect. |
+| Gap | Evidence |
+|-----|----------|
+| `continuous-learning` vs `continuous-learning-v2` overlap | v1 skill still documents comparing “v1 vs v2”; v2 SKILL.md says it supersedes v1. Keep both only if the Stop-hook path is still used; otherwise retire v1. |
+| Dead Remotion example | `remotion-video-creation/rules/charts.md` → `assets/charts/bar-chart.tsx` missing. |
+| Example markdown links look “dead” | `README.md` / `CONTRIBUTING.md` `reference/advanced.md` and `deep-research/SKILL.md` `](url)` are templates, not real files. |
+| No tests for `.github/bin/skill_lint.py` | `# pragma: no cover` on the read-error path; CI cannot regress the linter. |
+| Unused import | `test_parse_instinct.py` imports `unittest.mock` and never uses it. |
+| `videodb/scripts/ws_listener.py` | Third-party runtime (`videodb`, `dotenv`) not declared; script is skill support, not package code. |
+| Repo description / README “private library” vs public GitHub | README says private; `gh repo view` is public. Docs drift only. |
 
 ---
 
-## What this scan proved
+## Improvement plan (smallest next steps)
 
-- Linter is green on all 134 skills; README counts match `find`.
-- `gh run list` / `gh pr list`: lint on `main` is green; no open issues.
-- Documented `scan.sh` (pre-fix) returned **zero** skills from this repo root.
-- `scan.sh .` (pre-fix) returned **137** including `PACKS.md` with an empty name.
-- `evaluate-session.sh`’s `grep -c \|\| echo 0` produces a non-integer and trips
-  `[: integer expression expected]`.
-- `test_parse_instinct.py` exists and is substantial; CI never invoked it.
-- No committed live secrets turned up in a targeted grep.
-
-## What was skipped (on purpose)
-
-- No skill-body rewrites, no progressive-disclosure campaigns, no dependency
-  bumps, no retiring `continuous-learning` v1, no linter feature work, no
-  bats suite, no secret-scanner workflow, no LICENSE/NOTICE overhaul.
-- `configure-ecc`’s missing-skill catalog is upstream-shaped; not silently
-  trimmed.
-- Reference-file stale model IDs (P1-3) left in place.
-
-## Next recommended agent job
-
-Add a CI assertion that `scan.sh | jq '.scan_summary.project.count'` equals
-the linter’s skill count (134), then either retire `continuous-learning` v1
-or delete the dangling `docs/continuous-learning-v2-spec.md` pointer.
+1. ~~Unbreak stocktake scan on clones + exclude meta files.~~ done this PR
+2. ~~Run the existing instinct-cli pytest in CI.~~ done this PR
+3. ~~Fix `evaluate-session.sh` `grep -c` / `set -e`.~~ done this PR
+4. Next agent job: add bats (or a 20-line Python) tests for
+   `skill-stocktake/scripts/scan.sh` asserting a clone inventories 134
+   skills and never emits `README.md` / `PACKS.md`.
+5. After that: either retire `continuous-learning` (v1) or make v2 the
+   only documented hook; fix the SECURITY.md LICENSE link; refresh the
+   GitHub repo description to 134.
